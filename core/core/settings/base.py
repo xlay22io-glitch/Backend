@@ -54,7 +54,9 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "storages"
 ]
-LOCAL_APPS = []
+LOCAL_APPS = [
+    "authentication"
+]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -190,3 +192,5 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+AUTH_USER_MODEL = 'authentication.CustomUser'
