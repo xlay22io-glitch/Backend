@@ -5,7 +5,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
-from .serializers import RegisterSerializer, LoginSerializer, LogoutSerializer
+from .serializers import (
+    RegisterSerializer,
+    LoginSerializer,
+    LogoutSerializer,
+    RequestResetPasswordSerializer,
+    ResetPasswordSerializer
+)
 from .services import EmailService
 from .models import CustomUser
 
@@ -55,4 +61,25 @@ class LogoutView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({"detail": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RequestResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RequestResetPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(request)
+        return Response({"detail": "Reset password email successfuly sent!"}, status=status.HTTP_200_OK)
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        if not all(k in request.data for k in ("uid", "token", "password", "confirm_password")):
+            return Response({"detail": "Required data is missing!"}, status=status.HTTP_400_BAD_REQUEST)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Password reseted successfully!"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

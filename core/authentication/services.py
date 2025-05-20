@@ -19,3 +19,15 @@ class EmailService:
             [user.email],
             fail_silently=False,
         )
+
+    @staticmethod
+    def send_password_reset_email(email, reset_url):
+
+        message = f"Click the link below to reset your password:\n{reset_url}"
+        send_mail(
+            "Reset Your Password",
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
