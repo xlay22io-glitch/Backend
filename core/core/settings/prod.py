@@ -51,18 +51,18 @@ STORAGES = {
     "default": {
         "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
         "OPTIONS": {
-            "project_id": config("GCS_PROJECT_ID"),
-            "bucket_name": config("GCS_MEDIA_BUCKET"),
+            "project_id": config("G_CLOUD_PROJECT_ID"),
+            "bucket_name": config("G_CLOUD_BUCKET_NAME_MEDIA"),
             "credentials": GS_CREDENTIALS,  # noqa
         },
     },
     "staticfiles": {
         "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
         "OPTIONS": {
-            "project_id": config("GCS_PROJECT_ID"),
-            "bucket_name": config("GCS_STATIC_BUCKET"),
+            "project_id": config("G_CLOUD_PROJECT_ID"),
+            "bucket_name": config("G_CLOUD_BUCKET_NAME_STATIC"),
             "credentials": GS_CREDENTIALS,  # noqa
-        },
+        },  
     },
 }
 
