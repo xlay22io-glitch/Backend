@@ -26,8 +26,6 @@ DEBUG = False  # overridden in dev.py
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
-print(">>> ALLOWED_HOSTS =", ALLOWED_HOSTS)
-
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Europe/Paris"
 USE_I18N = True
@@ -55,7 +53,8 @@ THIRD_PARTY_APPS = [
     "storages"
 ]
 LOCAL_APPS = [
-    "authentication"
+    "authentication",
+    "accounts"
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

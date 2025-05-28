@@ -19,6 +19,8 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
+    balance = models.FloatField(default=0.0)
+    weekly_cashback = models.FloatField(default=0.0)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
