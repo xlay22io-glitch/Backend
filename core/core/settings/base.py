@@ -26,6 +26,8 @@ DEBUG = False  # overridden in dev.py
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
+ALLOWED_HOSTS+=['trade-layback-c5e4d4ce33d3.herokuapp.com']
+
 print(">>> ALLOWED_HOSTS =", ALLOWED_HOSTS)
 
 LANGUAGE_CODE = "en-us"
