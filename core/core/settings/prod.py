@@ -17,7 +17,7 @@ DATABASES = {
 # ---------------------------------------------------------------------------
 # Allowed hosts & security flags
 # ---------------------------------------------------------------------------
-ALLOWED_HOSTS = ["test-rebt-5c0ba7e6b65b.herokuapp.com"]
+ALLOWED_HOSTS = ["trade-layback-c5e4d4ce33d3.herokuapp.com"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
