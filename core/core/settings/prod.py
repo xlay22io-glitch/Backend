@@ -80,3 +80,5 @@ LOGGING["root"]["handlers"] += ["file"]  # type: ignore
 # Email backend – console for prod
 # ---------------------------------------------------------------------------
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+print(">>> USING PRODUCTION SETTINGS")
