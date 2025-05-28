@@ -17,7 +17,9 @@ DATABASES = {
 # ---------------------------------------------------------------------------
 # Allowed hosts & security flags
 # ---------------------------------------------------------------------------
-ALLOWED_HOSTS = ["trade-layback-c5e4d4ce33d3.herokuapp.com"]
+ALLOWED_HOSTS+=['trade-layback-c5e4d4ce33d3.herokuapp.com']
+
+print(">>> ALLOWED_HOSTS FROM PROD =", ALLOWED_HOSTS)
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
