@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent  # repo root
 SECRET_KEY = config("DJANGO_SECRET_KEY")
 DEBUG = False  # overridden in dev.py
 
-ALLOWED_HOSTS = [
-    h.strip() for h in config("ALLOWED_HOSTS", "").split(",") if h.strip()
-]
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+
+print(">>> ALLOWED_HOSTS =", ALLOWED_HOSTS)
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Europe/Paris"
