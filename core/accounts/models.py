@@ -17,3 +17,14 @@ class Lay(models.Model):
     file_name = models.CharField(max_length=255)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
+
+class DepositAddress(models.Model):
+    address = models.CharField(max_length=255, unique=True)
+    index = models.PositiveIntegerField(unique=True)
+
+class DepositRotation(models.Model):
+    current_index = models.PositiveIntegerField(default=1)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Deposit Rotation"
