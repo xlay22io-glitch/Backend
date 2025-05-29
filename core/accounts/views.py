@@ -86,9 +86,8 @@ class CalculatorView(APIView):
     def post(self, request):
         serializer = LayCreateSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
-            if "file" in serializer.errors:
-                return Response({"detail": "File field is required!"}, status=400)
-            return Response({"detail": "Data is not valid!"}, status=400)
+            logger.warning(f"Invalid data: {serializer.errors}")
+            return Response({"detail": serializer.errors}, status=400)
 
         try:
             user = request.user
