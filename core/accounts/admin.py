@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Lay, DepositAddress, DepositRotation
+from .models import Lay, DepositAddress, DepositRotation, WithdrawRequest
 
 @admin.register(Lay)
 class LayAdmin(admin.ModelAdmin):
@@ -18,3 +18,10 @@ class DepositAddressAdmin(admin.ModelAdmin):
 class DepositRotationAdmin(admin.ModelAdmin):
     list_display = ("current_index", "last_updated")
     readonly_fields = ("last_updated",)
+
+@admin.register(WithdrawRequest)
+class WithdrawRequestAdmin(admin.ModelAdmin):
+    list_display = ("user", "amount", "address", "created_at")
+    search_fields = ("user__email", "address")
+    list_filter = ("created_at",)
+    readonly_fields = ("created_at",)
