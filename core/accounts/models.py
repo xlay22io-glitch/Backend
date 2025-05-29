@@ -15,6 +15,7 @@ class Lay(models.Model):
     win_payout = models.FloatField()
     loss_payout = models.FloatField()
     file_name = models.CharField(max_length=255)
+    file = models.ImageField(upload_to='lays/')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
 

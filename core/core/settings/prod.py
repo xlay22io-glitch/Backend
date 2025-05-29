@@ -25,6 +25,29 @@ SECURE_HSTS_SECONDS = 60 * 60 * 24  # 1 day
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
+# -----------------------------------------------------------------------------
+# CORS / CSRF
+# -----------------------------------------------------------------------------
+FRONTEND_URL = config("FRONTEND_URL", "http://localhost:5173")
+BACKEND_URL = config("BACKEND_URL", "http://127.0.0.1:8000")
+
+def get_origin(url):
+    parsed = urlparse(url)
+    return f"{parsed.scheme}://{parsed.hostname}" + (f":{parsed.port}" if parsed.port else "")
+
+
+CORS_ALLOWED_ORIGINS = [
+    get_origin(os.environ.get("FRONTEND_URL", "")),
+    get_origin(os.environ.get("BACKEND_URL", "")),
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    get_origin(FRONTEND_URL),
+    get_origin(BACKEND_URL),
+]
+
 # ---------------------------------------------------------------------------
 # Whitenoise for static files
 # ---------------------------------------------------------------------------

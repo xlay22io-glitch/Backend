@@ -9,7 +9,7 @@ from django.db import transaction
 from django.core.mail import send_mail
 
 from .models import Lay, DepositRotation, DepositAddress
-from .serializers import LaySerializer, WithdrawRequestSerializer
+from .serializers import LaySerializer, WithdrawRequestSerializer, LayCreateSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -79,3 +79,50 @@ class WithdrawRequestView(APIView):
         except Exception as e:
             logger.exception("Withdraw request failed")
             return Response({"detail": "Internal Server Error!"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class CalculatorView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = LayCreateSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            if "file" in serializer.errors:
+                return Response({"detail": "File field is required!"}, status=400)
+            return Response({"detail": "Data is not valid!"}, status=400)
+
+        try:
+            user = request.user
+            data = serializer.validated_data
+
+            with transaction.atomic():
+                lay = Lay.objects.create(
+                    user=user,
+                    total_odds=data['total_odd'],
+                    stake_amount=data['stake_amount'],
+                    win_payout=data['win_payout'],
+                    loss_payout=0,
+                    file_name=data['file'].name,
+                    status="active"
+                )
+                
+                lay.file.save(data['file'].name, data['file'])
+                lay.file_name = data['file'].name
+                lay.save()
+
+                user.balance -= data['stake_amount']
+                user.save()
+
+            logger.info(f"Lay created by {user.email}")
+
+            send_mail(
+                subject="New Lay Submission",
+                message=f"User {user.email} submitted a lay with odds {data['total_odd']} and stake {data['stake_amount']}.",
+                from_email="noreply@tradelayback.com",
+                recipient_list=["admin@tradelayback.com"]
+            )
+
+            return Response({}, status=200)
+
+        except Exception as e:
+            logger.exception("Lay submission failed")
+            return Response({"detail": "Internal Server Error!"}, status=500)
