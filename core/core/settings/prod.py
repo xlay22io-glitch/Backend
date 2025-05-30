@@ -37,8 +37,8 @@ def get_origin(url):
 
 
 CORS_ALLOWED_ORIGINS = [
-    get_origin(os.environ.get("FRONTEND_URL", "")),
-    get_origin(os.environ.get("BACKEND_URL", "")),
+    get_origin(os.environ.get("FRONTEND_URL", "http://localhost:5173")),
+    get_origin(os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")),
 ]
 
 CORS_ALLOW_CREDENTIALS = True

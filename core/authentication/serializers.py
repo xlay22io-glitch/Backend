@@ -4,6 +4,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import authenticate
+from django.conf import settings
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 
@@ -82,7 +83,7 @@ class RequestResetPasswordSerializer(serializers.Serializer):
         if self.user:
             uid = urlsafe_base64_encode(force_bytes(self.user.pk))
             token = default_token_generator.make_token(self.user)
-            reset_url = f"{request.build_absolute_uri('/auth/reset/password/')}?uid={uid}&token={token}"
+            reset_url = f"{settings.FRONTEND_URL}/reset/password/?uid={uid}&token={token}"
             EmailService.send_password_reset_email(self.user.email, reset_url)
 
 class ResetPasswordSerializer(serializers.Serializer):

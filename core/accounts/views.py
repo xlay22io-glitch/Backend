@@ -61,7 +61,11 @@ class WithdrawRequestView(APIView):
         try:
             serializer = WithdrawRequestSerializer(data=request.data, context={'request': request})
             if not serializer.is_valid():
+                errors = serializer.errors
+                if "amount" in errors:
+                    return Response({"detail": errors["amount"][0]}, status=status.HTTP_400_BAD_REQUEST)
                 return Response({"detail": "Data is not valid!"}, status=status.HTTP_400_BAD_REQUEST)
+
 
             withdraw_request = serializer.save(user=request.user)
 

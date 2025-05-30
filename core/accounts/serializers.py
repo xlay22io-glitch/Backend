@@ -34,7 +34,7 @@ class WithdrawRequestSerializer(serializers.ModelSerializer):
     def validate_amount(self, value):
         user = self.context['request'].user
         if value > user.balance:
-            raise serializers.ValidationError(_("Amount exceeds current balance."))
+            raise serializers.ValidationError(_("You can't withdraw more than you have on account balance"))
         if value <= 0:
             raise serializers.ValidationError(_("Amount must be positive."))
         return value

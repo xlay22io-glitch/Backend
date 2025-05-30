@@ -47,14 +47,14 @@ fail-under=10
 #from-stdin=
 
 # Files or directories to be skipped. They should be base names, not paths.
-ignore=apps.py, tests.py, manage.py, __init__.py, base.py, dev.py, prod.py
+ignore=apps.py, tests.py, manage.py, __init__.py, base.py, dev.py, prod.py, test_*.py
 
 
 # Add files or directories matching the regular expressions patterns to the
 # ignore-list. The regex matches against paths and can be in Posix or Windows
 # format. Because '\\' represents the directory delimiter on Windows systems,
 # it can't be used as an escape character.
-ignore-paths=.*/migrations.*, .*/tests/.*
+ignore-paths=.*migrations/.*,.*tests/.*,.*settings/.*,.*apps\.py
 
 # Files or directories matching the regular expression patterns are skipped.
 # The regex matches against base names, not paths. The default value ignores
