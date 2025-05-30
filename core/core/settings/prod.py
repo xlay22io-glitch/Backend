@@ -3,6 +3,7 @@ Production settings – Heroku Postgres, Google Cloud Storage, Whitenoise.
 """
 from .base import *  # noqa: F401,F403
 import dj_database_url
+from urllib.parse import urlparse
 from decouple import config
 
 DEBUG = False

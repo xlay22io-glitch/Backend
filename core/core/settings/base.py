@@ -5,7 +5,6 @@ configuration here.
 """
 from pathlib import Path
 from datetime import timedelta
-from urllib.parse import urlparse
 import os
 import json
 import base64
