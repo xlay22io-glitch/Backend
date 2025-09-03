@@ -13,6 +13,7 @@ from .serializers import LaySerializer, WithdrawRequestSerializer, LayCreateSeri
 
 logger = logging.getLogger(__name__)
 
+
 class AccountInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -26,13 +27,15 @@ class AccountInfoView(APIView):
                 "balance": user.balance,
                 "weekly_cashback": user.weekly_cashback,
                 "active_lay": LaySerializer(active_lay, many=True).data,
-                "history": LaySerializer(history, many=True).data
+                "history": LaySerializer(history, many=True).data,
+                "email": request.user.email
             })
         except Exception:
             return Response(
                 {"detail": "Unexpected server error happend!"},
                 status=500
             )
+
 
 class GenerateDepositAddressView(APIView):
     permission_classes = [IsAuthenticated]
@@ -41,9 +44,15 @@ class GenerateDepositAddressView(APIView):
         try:
             with transaction.atomic():
                 rotation = DepositRotation.objects.select_for_update().first()
-                address = DepositAddress.objects.get(index=rotation.current_index)
+                address = DepositAddress.objects.get(
+                    index=rotation.current_index)
+                max_index = (
+                    DepositAddress.objects.order_by('-index')
+                    .values_list('index', flat=True)
+                    .first()
+                )
+                rotation.current_index = 1 if rotation.current_index >= max_index else rotation.current_index + 1
 
-                rotation.current_index = 1 if rotation.current_index == 10 else rotation.current_index + 1
                 rotation.save()
 
             return Response({"address": address.address})
@@ -54,22 +63,24 @@ class GenerateDepositAddressView(APIView):
                 status=500
             )
 
+
 class WithdrawRequestView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
-            serializer = WithdrawRequestSerializer(data=request.data, context={'request': request})
+            serializer = WithdrawRequestSerializer(
+                data=request.data, context={'request': request})
             if not serializer.is_valid():
                 errors = serializer.errors
                 if "amount" in errors:
                     return Response({"detail": errors["amount"][0]}, status=status.HTTP_400_BAD_REQUEST)
                 return Response({"detail": "Data is not valid!"}, status=status.HTTP_400_BAD_REQUEST)
 
-
             withdraw_request = serializer.save(user=request.user)
 
-            logger.info(f"Withdraw requested by user {request.user.email} for amount {withdraw_request.amount}")
+            logger.info(
+                f"Withdraw requested by user {request.user.email} for amount {withdraw_request.amount}")
 
             send_mail(
                 subject="New Withdraw Request",
@@ -84,11 +95,13 @@ class WithdrawRequestView(APIView):
             logger.exception("Withdraw request failed")
             return Response({"detail": "Internal Server Error!"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class CalculatorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = LayCreateSerializer(data=request.data, context={'request': request})
+        serializer = LayCreateSerializer(
+            data=request.data, context={'request': request})
         if not serializer.is_valid():
             logger.warning(f"Invalid data: {serializer.errors}")
             return Response({"detail": serializer.errors}, status=400)
@@ -107,7 +120,7 @@ class CalculatorView(APIView):
                     file_name=data['file'].name,
                     status="active"
                 )
-                
+
                 lay.file.save(data['file'].name, data['file'])
                 lay.file_name = data['file'].name
                 lay.save()

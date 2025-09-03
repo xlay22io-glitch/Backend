@@ -13,6 +13,11 @@ import logging
 from decouple import config
 from google.oauth2 import service_account
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:8000"
+]
+
 # -----------------------------------------------------------------------------
 # Paths
 # -----------------------------------------------------------------------------
@@ -131,6 +136,8 @@ AUTHENTICATION_BACKENDS = [
 # -----------------------------------------------------------------------------
 # Google Cloud Storage credentials helper
 # -----------------------------------------------------------------------------
+
+
 def _load_gcs_credentials():
     path = config("GCS_CREDENTIALS_PATH", default=None)
     b64 = config("GOOGLE_CREDENTIALS_BASE64", default=None)
