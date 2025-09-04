@@ -5,12 +5,13 @@ from authentication.models import CustomUser as User
 from .utils import apply_weekly_delta
 
 
+class LayStatus(models.TextChoices):
+    DECLINED = "declined", "Declined"
+    PENDING = "pending",  "Pending"
+    APPROVED = "approved", "Approved"
+
+
 class Lay(models.Model):
-    STATUS_CHOICES = [
-        ("declined", "Declined"),
-        ("pending", "Pending"),
-        ("approved", "Approved"),
-    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -27,8 +28,8 @@ class Lay(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=20,
-        choices=STATUS_CHOICES,
-        default="pending",
+        choices=LayStatus.choices,
+        default=LayStatus.PENDING,
     )
 
     def _status_delta(self, status) -> Decimal:

@@ -1,11 +1,11 @@
 import logging
-
+from decimal import Decimal
 from rest_framework import status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-
+from django.utils.timezone import now
 from django.db import transaction
 from django.core.mail import send_mail
 
@@ -112,6 +112,12 @@ class CalculatorView(APIView):
         try:
             user = request.user
             data = serializer.validated_data
+            today = now().date()
+            start, end = get_week_range(today)
+            new_start = start
+            new_end = end
+            weekly_balance = WeeklyBonus.objects.filter(
+                week_start=new_start, week_end=new_end, user=user)
 
             with transaction.atomic():
                 lay = Lay.objects.create(
@@ -120,7 +126,6 @@ class CalculatorView(APIView):
                     stake_amount=data['stake_amount'],
                     win_payout=data['win_payout'],
                     file_name=data['file'].name,
-                    status="active",
                     match=data['match'],
                     tip=data['tip'],
                     loss_payout=data['loss_payout']
@@ -131,6 +136,8 @@ class CalculatorView(APIView):
                 lay.save()
 
                 user.balance -= data['stake_amount']
+                weekly_balance.update(
+                    weekly_balance=weekly_balance[0].weekly_balance - Decimal(data['stake_amount']))
                 user.save()
 
             logger.info(f"Lay created by {user.email}")

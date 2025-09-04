@@ -189,14 +189,14 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
 
-# CRONJOBS = [
-#     # Run every Monday at 00:01
-#     ('1 0 * * 1', 'accounts.cron.reset_weekly_bonuses')
-# ]
-
-
 CRONJOBS = [
-    # Every minute
-    ('* * * * *', 'accounts.cron.reset_weekly_bonuses',
-     '>> /tmp/weekly_bonus.log 2>&1')
+    # Run every Monday at 00:01
+    ('1 0 * * 1', 'accounts.cron.reset_weekly_bonuses')
 ]
+
+
+# CRONJOBS = [
+#     # Every minute
+#     ('* * * * *', 'accounts.cron.reset_weekly_bonuses',
+#      '>> /tmp/weekly_bonus.log 2>&1')
+# ]
