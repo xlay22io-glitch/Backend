@@ -20,14 +20,13 @@ class AccountInfoView(APIView):
     def get(self, request):
         try:
             user = request.user
-            active_lay = Lay.objects.filter(user=user, status='active')
-            history = Lay.objects.filter(user=user, status='history')
+            lays = Lay.objects.filter(user=user)
 
             return Response({
                 "balance": user.balance,
                 "weekly_cashback": user.weekly_cashback,
-                "active_lay": LaySerializer(active_lay, many=True).data,
-                "history": LaySerializer(history, many=True).data,
+                "active_lay": LaySerializer(lays, many=True).data,
+
                 "email": request.user.email
             })
         except Exception:
@@ -116,9 +115,11 @@ class CalculatorView(APIView):
                     total_odds=data['total_odd'],
                     stake_amount=data['stake_amount'],
                     win_payout=data['win_payout'],
-                    loss_payout=0,
                     file_name=data['file'].name,
-                    status="active"
+                    status="active",
+                    match=data['match'],
+                    tip=data['tip'],
+                    loss_payout=data['loss_payout']
                 )
 
                 lay.file.save(data['file'].name, data['file'])
