@@ -1,15 +1,18 @@
 import logging
 
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 
 from django.db import transaction
 from django.core.mail import send_mail
 
-from .models import Lay, DepositRotation, DepositAddress
-from .serializers import LaySerializer, WithdrawRequestSerializer, LayCreateSerializer
+from .models import Lay, DepositRotation, DepositAddress, WeeklyBonus
+from .serializers import LaySerializer, WithdrawRequestSerializer, LayCreateSerializer, WeeklyBonusSerializer
+from .utils import get_week_range
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +24,13 @@ class AccountInfoView(APIView):
         try:
             user = request.user
             lays = Lay.objects.filter(user=user)
+            weekly_bonus = WeeklyBonus.objects.filter(user=user)
 
             return Response({
                 "balance": user.balance,
                 "weekly_cashback": user.weekly_cashback,
                 "active_lay": LaySerializer(lays, many=True).data,
-
+                "weekly_bonus": WeeklyBonusSerializer(weekly_bonus, many=True).data,
                 "email": request.user.email
             })
         except Exception:
@@ -143,3 +147,44 @@ class CalculatorView(APIView):
         except Exception as e:
             logger.exception("Lay submission failed")
             return Response({"detail": "Internal Server Error!"}, status=500)
+
+
+class WeeklyBonusViewSet(viewsets.ModelViewSet):
+    serializer_class = WeeklyBonusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return WeeklyBonus.objects.filter(user=self.request.user)
+
+    @action(detail=False, methods=["get"])
+    def current(self, request):
+        """Get or create current week’s record"""
+        start, end = get_week_range()
+        bonus, _ = WeeklyBonus.objects.get_or_create(
+            user=request.user, week_start=start, week_end=end
+        )
+        bonus.calculate_reward()
+        bonus.save()
+        return Response(self.get_serializer(bonus).data)
+
+    @action(detail=False, methods=["post"])
+    def update_balance(self, request):
+        """
+        Admin logic: adjust weekly balance when OK/KO is clicked.
+        Expected input: { "result": "ok", "amount": 0.5 }
+        """
+        start, end = get_week_range()
+        bonus, _ = WeeklyBonus.objects.get_or_create(
+            user=request.user, week_start=start, week_end=end
+        )
+
+        result = request.data.get("result")
+        amount = float(request.data.get("amount", 0))
+
+        if result == "ok":
+            bonus.weekly_balance += amount  # Win payout
+        elif result == "ko":
+            bonus.weekly_balance -= amount  # Stake amount
+        bonus.calculate_reward()
+        bonus.save()
+        return Response(self.get_serializer(bonus).data)

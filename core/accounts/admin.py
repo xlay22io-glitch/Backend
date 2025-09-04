@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Lay, DepositAddress, DepositRotation, WithdrawRequest
+from .models import Lay, DepositAddress, DepositRotation, WithdrawRequest, WeeklyBonus
+
 
 @admin.register(Lay)
 class LayAdmin(admin.ModelAdmin):
@@ -18,16 +19,19 @@ class LayAdmin(admin.ModelAdmin):
         return "-"
     image_tag.short_description = "Preview"
 
+
 @admin.register(DepositAddress)
 class DepositAddressAdmin(admin.ModelAdmin):
     list_display = ("index", "address")
     ordering = ("index",)
     search_fields = ("address",)
 
+
 @admin.register(DepositRotation)
 class DepositRotationAdmin(admin.ModelAdmin):
     list_display = ("current_index", "last_updated")
     readonly_fields = ("last_updated",)
+
 
 @admin.register(WithdrawRequest)
 class WithdrawRequestAdmin(admin.ModelAdmin):
@@ -35,3 +39,6 @@ class WithdrawRequestAdmin(admin.ModelAdmin):
     search_fields = ("user__email", "address")
     list_filter = ("created_at",)
     readonly_fields = ("created_at",)
+
+
+admin.site.register(WeeklyBonus)

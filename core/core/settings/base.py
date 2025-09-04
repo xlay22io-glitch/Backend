@@ -55,7 +55,8 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
-    "storages"
+    "storages",
+    'django_crontab',
 ]
 LOCAL_APPS = [
     "authentication",
@@ -187,3 +188,15 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
+
+# CRONJOBS = [
+#     # Run every Monday at 00:01
+#     ('1 0 * * 1', 'accounts.cron.reset_weekly_bonuses')
+# ]
+
+
+CRONJOBS = [
+    # Every minute
+    ('* * * * *', 'accounts.cron.reset_weekly_bonuses',
+     '>> /tmp/weekly_bonus.log 2>&1')
+]

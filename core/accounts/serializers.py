@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
-from .models import Lay, WithdrawRequest
+from .models import Lay, WithdrawRequest, WeeklyBonus
 
 
 class LaySerializer(serializers.ModelSerializer):
@@ -46,3 +46,10 @@ class WithdrawRequestSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError(_("Amount must be positive."))
         return value
+
+
+class WeeklyBonusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WeeklyBonus
+        fields = ["id", "week_start", "week_end",
+                  "weekly_balance", "weekly_reward"]
