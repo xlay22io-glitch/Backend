@@ -32,17 +32,24 @@ class Lay(models.Model):
         default=LayStatus.PENDING,
     )
 
-    def _status_delta(self, status) -> Decimal:
-        """Map a status to its effect on weekly_balance."""
+    def _status_weekly_delta(self, status) -> Decimal:
         if status == "approved":
-            return Decimal(str(self.win_payout))          # +win
+            return Decimal(str(self.win_payout)) - Decimal(str(self.stake_amount))
         if status == "declined":
-            return Decimal(str(-self.stake_amount))       # -stake
-        # pending/others: no effect
+            return -Decimal(str(self.stake_amount))
+        return Decimal("0")
+
+    # ── Wallet (available balance) credit on a given status
+    # Declined: +loss_payout
+    # Approved: +win_payout
+    def _status_wallet_credit(self, status) -> Decimal:
+        if status == "approved":
+            return Decimal(str(self.win_payout))
+        if status == "declined":
+            return Decimal(str(self.loss_payout or "0"))
         return Decimal("0")
 
     def save(self, *args, **kwargs):
-        # detect old status if updating
         old_status = None
         if self.pk:
             try:
@@ -51,26 +58,37 @@ class Lay(models.Model):
                 old_status = None
 
         with transaction.atomic():
-            super().save(*args, **kwargs)  # persist new status/amounts first
+            # lock the user row to make wallet math race-safe
+            user = User.objects.select_for_update().get(pk=self.user_id)
 
-            # If status changed, adjust the weekly balance for the week of THIS lay (created_at week)
+            super().save(*args, **kwargs)  # persist changes to this Lay
+
+            # Only act when status actually changed
             if old_status != self.status:
-                # Use the lay's created_at week (not "now"), so history is correct
-                ref_date = (self.created_at.date()
-                            if self.created_at else None)
+                ref_date = self.created_at.date() if self.created_at else None
 
-                # revert old effect, then apply new
+                # 1) WEEKLY BALANCE change: revert old effect, apply new
                 if old_status:
                     apply_weekly_delta(
                         user=self.user,
                         reference_date=ref_date,
-                        delta=(-self._status_delta(old_status))
+                        delta=-self._status_weekly_delta(old_status),
                     )
                 apply_weekly_delta(
                     user=self.user,
                     reference_date=ref_date,
-                    delta=(self._status_delta(self.status))
+                    delta=self._status_weekly_delta(self.status),
                 )
+
+                # 2) USER WALLET (available balance): credit difference
+                old_credit = self._status_wallet_credit(
+                    old_status) if old_status else Decimal("0")
+                new_credit = self._status_wallet_credit(self.status)
+                diff = new_credit - old_credit
+
+                current = Decimal(str(user.balance or 0))
+                user.balance = float(current + diff)
+                user.save(update_fields=["balance"])
 
 
 class DepositAddress(models.Model):

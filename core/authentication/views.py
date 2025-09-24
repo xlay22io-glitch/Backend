@@ -1,10 +1,13 @@
 # authentication/views.py
+from django.utils.timezone import now
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
+from accounts.models import WeeklyBonus
+from accounts.utils import get_week_range
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -15,20 +18,27 @@ from .serializers import (
 from .services import EmailService
 from .models import CustomUser
 
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            reference_date = now().date()
+            week_start, week_end = get_week_range(reference_date)
+            WeeklyBonus.objects.select_for_update().get_or_create(
+                user=user, week_start=week_start, week_end=week_end
+            )
             EmailService.send_activation_email(user, request)
             return Response({"detail": "Registration successful! Please verify your email."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         uid = request.data.get("uid")
         token = request.data.get("token")
@@ -44,6 +54,7 @@ class VerifyEmailView(APIView):
             return Response({"detail": "Email successfuly verified!"}, status=status.HTTP_200_OK)
         return Response({"detail": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -52,6 +63,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -63,6 +75,7 @@ class LogoutView(APIView):
             return Response({"detail": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class RequestResetPasswordView(APIView):
     permission_classes = [AllowAny]
 
@@ -71,6 +84,7 @@ class RequestResetPasswordView(APIView):
         if serializer.is_valid():
             serializer.save(request)
         return Response({"detail": "Reset password email successfuly sent!"}, status=status.HTTP_200_OK)
+
 
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]

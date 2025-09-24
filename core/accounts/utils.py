@@ -27,6 +27,9 @@ def apply_weekly_delta(*, user, reference_date, delta):
     bonus, _ = WeeklyBonus.objects.select_for_update().get_or_create(
         user=user, week_start=week_start, week_end=week_end
     )
+    current = Decimal(bonus.weekly_balance)
+    bonus.weekly_balance = (current + Decimal(delta)
+                            ).quantize(Decimal("0.000001"))
 
     bonus.calculate_reward()
-    bonus.save()
+    bonus.save(update_fields=["weekly_balance", "weekly_reward"])
