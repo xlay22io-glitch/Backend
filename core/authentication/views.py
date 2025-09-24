@@ -28,7 +28,7 @@ class RegisterView(APIView):
             user = serializer.save()
             reference_date = now().date()
             week_start, week_end = get_week_range(reference_date)
-            WeeklyBonus.objects.select_for_update().get_or_create(
+            WeeklyBonus.objects.create(
                 user=user, week_start=week_start, week_end=week_end
             )
             EmailService.send_activation_email(user, request)
