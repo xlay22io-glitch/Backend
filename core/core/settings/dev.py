@@ -6,7 +6,7 @@ from decouple import config
 
 DEBUG = True
 
-ALLOWED_HOSTS+=["127.0.0.1"]
+ALLOWED_HOSTS += ["127.0.0.1"]
 
 # ---------------------------------------------------------------------------
 # Database (local Postgres)
@@ -35,4 +35,4 @@ LOGGING["root"]["level"] = "DEBUG"  # type: ignore
 # ---------------------------------------------------------------------------
 # Email backend – console for dev
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
