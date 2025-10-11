@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django.db import transaction
 from django.core.mail import send_mail
+from django.conf import settings
 
 from .models import Lay, DepositRotation, DepositAddress, WeeklyBonus
 from .serializers import LaySerializer, WithdrawRequestSerializer, LayCreateSerializer, WeeklyBonusSerializer
@@ -101,49 +102,46 @@ class CalculatorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = LayCreateSerializer(
-            data=request.data, context={'request': request})
+        serializer = LayCreateSerializer(data=request.data, context={'request': request})
         if not serializer.is_valid():
             logger.warning(f"Invalid data: {serializer.errors}")
             return Response({"detail": serializer.errors}, status=400)
 
+        user = request.user
+        data = serializer.validated_data
+
+        with transaction.atomic():
+            lay = Lay.objects.create(
+                user=user,
+                total_odds=data['total_odd'],
+                stake_amount=data['stake_amount'],
+                win_payout=data['win_payout'],
+                file_name=data['file'].name,
+                match=data['match'],
+                tip=data['tip'],
+                loss_payout=data['loss_payout'],
+            )
+            lay.file.save(data['file'].name, data['file'])
+            lay.file_name = data['file'].name
+            lay.save()
+
+            user.balance -= data['stake_amount']
+            user.save(update_fields=["balance"])
+
+        logger.info(f"Lay created by {user.email}")
+
         try:
-            user = request.user
-            data = serializer.validated_data
-
-            with transaction.atomic():
-                lay = Lay.objects.create(
-                    user=user,
-                    total_odds=data['total_odd'],
-                    stake_amount=data['stake_amount'],
-                    win_payout=data['win_payout'],
-                    file_name=data['file'].name,
-                    match=data['match'],
-                    tip=data['tip'],
-                    loss_payout=data['loss_payout']
-                )
-
-                lay.file.save(data['file'].name, data['file'])
-                lay.file_name = data['file'].name
-                lay.save()
-
-                user.balance -= data['stake_amount']
-                user.save()
-
-            logger.info(f"Lay created by {user.email}")
-
             send_mail(
                 subject="New Lay Submission",
                 message=f"User {user.email} submitted a lay with odds {data['total_odd']} and stake {data['stake_amount']}.",
-                from_email="noreply@tradelayback.com",
-                recipient_list=["admin@tradelayback.com"]
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=["admin@tradelayback.com"],
+                fail_silently=False,
             )
-
-            return Response({}, status=200)
-
         except Exception as e:
-            logger.exception("Lay submission failed")
-            return Response({"detail": "Internal Server Error!"}, status=500)
+            logger.exception("Failed to send admin notification email for new lay")
+
+        return Response({}, status=200)
 
 
 class WeeklyBonusViewSet(viewsets.ModelViewSet):
