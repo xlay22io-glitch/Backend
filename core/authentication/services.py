@@ -5,6 +5,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.conf import settings
 
+
 class EmailService:
 
     def send_activation_email(user, request):
@@ -29,5 +30,15 @@ class EmailService:
             message,
             settings.DEFAULT_FROM_EMAIL,
             [email],
+            fail_silently=False,
+        )
+
+    @staticmethod
+    def notify_admin_email(subject, message):
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.DEFAULT_FROM_EMAIL],
             fail_silently=False,
         )

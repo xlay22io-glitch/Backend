@@ -23,7 +23,7 @@ class AccountInfoView(APIView):
         try:
             user = request.user
             lays = Lay.objects.filter(user=user).order_by('-created_at')
-            weekly_bonus = WeeklyBonus.objects.filter(user=user)
+            weekly_bonus = WeeklyBonus.objects.filter(user=user).last()
 
             return Response({
                 "balance": user.balance,
@@ -87,8 +87,8 @@ class WithdrawRequestView(APIView):
             send_mail(
                 subject="New Withdraw Request",
                 message=f"User {request.user.email} requested withdrawal of {withdraw_request.amount} to address {withdraw_request.address}.",
-                from_email="noreply@tradelayback.com",
-                recipient_list=["admin@tradelayback.com"]
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.DEFAULT_FROM_EMAIL]
             )
 
             return Response({"detail": "We received your request! We will get back to you shortly!"}, status=status.HTTP_200_OK)
@@ -102,7 +102,8 @@ class CalculatorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = LayCreateSerializer(data=request.data, context={'request': request})
+        serializer = LayCreateSerializer(
+            data=request.data, context={'request': request})
         if not serializer.is_valid():
             logger.warning(f"Invalid data: {serializer.errors}")
             return Response({"detail": serializer.errors}, status=400)
@@ -135,11 +136,12 @@ class CalculatorView(APIView):
                 subject="New Lay Submission",
                 message=f"User {user.email} submitted a lay with odds {data['total_odd']} and stake {data['stake_amount']}.",
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=["admin@tradelayback.com"],
+                recipient_list=[settings.DEFAULT_FROM_EMAIL],
                 fail_silently=False,
             )
         except Exception as e:
-            logger.exception("Failed to send admin notification email for new lay")
+            logger.exception(
+                "Failed to send admin notification email for new lay")
 
         return Response({}, status=200)
 

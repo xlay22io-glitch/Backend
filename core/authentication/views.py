@@ -31,6 +31,8 @@ class RegisterView(APIView):
             WeeklyBonus.objects.create(
                 user=user, week_start=week_start, week_end=week_end
             )
+            EmailService.notify_admin_email(
+                "New User Registered", f"User {user.email} has registered.")
             EmailService.send_activation_email(user, request)
             return Response({"detail": "Registration successful! Please verify your email."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
