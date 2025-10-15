@@ -8,6 +8,7 @@ from django.db import transaction
 from django.core.mail import send_mail
 from django.conf import settings
 
+from authentication.services import EmailService
 from .models import Lay, DepositRotation, DepositAddress, WeeklyBonus
 from .serializers import LaySerializer, WithdrawRequestSerializer, LayCreateSerializer, WeeklyBonusSerializer
 from .utils import get_week_range
@@ -20,23 +21,23 @@ class AccountInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        try:
-            user = request.user
-            lays = Lay.objects.filter(user=user).order_by('-created_at')
-            weekly_bonus = WeeklyBonus.objects.filter(user=user).last()
+        # try:
+        user = request.user
+        lays = Lay.objects.filter(user=user).order_by('-created_at')
+        weekly_bonus = WeeklyBonus.objects.filter(user=user).last()
 
-            return Response({
-                "balance": user.balance,
-                "weekly_cashback": user.weekly_cashback,
-                "active_lay": LaySerializer(lays, many=True).data,
-                "weekly_bonus": WeeklyBonusSerializer(weekly_bonus, many=True).data,
-                "email": request.user.email
-            })
-        except Exception:
-            return Response(
-                {"detail": "Unexpected server error happend!"},
-                status=500
-            )
+        return Response({
+            "balance": user.balance,
+            "weekly_cashback": user.weekly_cashback,
+            "active_lay": LaySerializer(lays, many=True).data,
+            "weekly_bonus": WeeklyBonusSerializer(weekly_bonus).data,
+            "email": request.user.email
+        })
+        # except Exception:
+        #     return Response(
+        #         {"detail": "Unexpected server error happend!"},
+        #         status=500
+        #     )
 
 
 class GenerateDepositAddressView(APIView):
@@ -185,3 +186,22 @@ class WeeklyBonusViewSet(viewsets.ModelViewSet):
         bonus.calculate_reward()
         bonus.save()
         return Response(self.get_serializer(bonus).data)
+
+
+class DepositClickViewView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            EmailService.notify_admin_email(
+                subject="Deposit Clicked",
+                message=f"User {request.user.email} clicked the copy deposit button.")
+
+            return Response({"detail": "Deposity copy"}, status=200)
+        except Exception as e:
+            print(e)
+            logger.exception("Error processing deposit click")
+            return Response(
+                {"detail": "Unexpected error has happend!"},
+                status=500
+            )
