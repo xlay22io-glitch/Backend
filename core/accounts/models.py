@@ -147,3 +147,6 @@ class WeeklyBonus(models.Model):
         self.weekly_balance = 0
         self.weekly_reward = 0
         self.save()
+
+    def __str__(self):
+        return f'{self.user}: {self.week_start} - {self.week_end}'
