@@ -192,10 +192,17 @@ class DepositClickViewView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        data = request.data
+        address = data.get("address", None)
+        if not address:
+            return Response(
+                {"detail": "Address is required."},
+                status=400
+            )
         try:
             EmailService.notify_admin_email(
                 subject="Deposit Clicked",
-                message=f"User {request.user.email} clicked the copy deposit button.")
+                message=f"User {request.user.email} clicked the copy deposit button. Address: {address}")
 
             return Response({"detail": "Deposity copy"}, status=200)
         except Exception as e:
